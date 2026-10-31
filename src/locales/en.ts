@@ -17,7 +17,12 @@ export const en: LocaleData = {
     /\bwithout\s+(accepting|accept|consent|consenting)\b/i,
   ],
   privacy: {
-    urlStems: ["privacy[_-]?polic", "data[_-]?protection", "data[_-]?privacy"],
+    urlStems: [
+      "privacy[_-]?polic",
+      "data[_-]?protection",
+      "data[_-]?privacy",
+      "/privacy/([a-z]{2}-)?polic",
+    ],
     textStems: ["privacy\\s+polic", "data\\s+protection"],
   },
   info: {

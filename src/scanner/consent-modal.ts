@@ -3,6 +3,7 @@ import type { ConsentModal, ConsentButton, ConsentCheckbox, ConsentButtonType } 
 import { analyzeButtonWording } from "../analyzers/wording.js";
 import type { ScanOptions } from "../types.js";
 import { aggregateLocales } from "../locales/index.js";
+import { selectPrivacyPolicyUrl, type LinkCandidate } from "./privacy-link.js";
 
 const LOCALE_VOCAB = aggregateLocales();
 
@@ -65,39 +66,34 @@ export async function findPrivacyPolicyUrl(
   page: Page,
   scopeSelector?: string,
 ): Promise<string | null> {
-  return page
-    .evaluate(
-      ({ scope, urlPats, textPats }) => {
-        const root: Element | Document = scope
-          ? (document.querySelector(scope) ?? document)
-          : document;
-        const links = root.querySelectorAll("a[href]");
-        for (const link of links) {
-          const href = (link as HTMLAnchorElement).href ?? "";
-          const normalizedHref = href.toLowerCase();
-          const text = (link.textContent ?? "").trim();
-          if (
-            !href ||
-            normalizedHref.startsWith("javascript:") ||
-            normalizedHref.startsWith("data:") ||
-            normalizedHref.startsWith("vbscript:") ||
-            href === "#"
-          ) {
-            continue;
-          }
-          const matchUrl = urlPats.some((p) => new RegExp(p, "i").test(href));
-          const matchText = textPats.some((p) => new RegExp(p, "i").test(text));
-          if (matchUrl || matchText) return href;
+  // Collect only inside the page; matching happens Node-side in selectPrivacyPolicyUrl.
+  const links = await page
+    .evaluate((scope): LinkCandidate[] => {
+      const root: Element | Document = scope
+        ? (document.querySelector(scope) ?? document)
+        : document;
+      const out: LinkCandidate[] = [];
+      const collect = (node: Element | Document | ShadowRoot, inShadow: boolean): void => {
+        for (const link of node.querySelectorAll("a[href]")) {
+          out.push({
+            href: (link as HTMLAnchorElement).href ?? "",
+            text: link.textContent ?? "",
+            inShadow,
+          });
         }
-        return null;
-      },
-      {
-        scope: scopeSelector ?? null,
-        urlPats: LOCALE_VOCAB.privacyUrl,
-        textPats: LOCALE_VOCAB.privacyText,
-      },
-    )
+        const hosts: Element[] = [];
+        if (node instanceof Element && node.shadowRoot) hosts.push(node);
+        for (const el of node.querySelectorAll("*")) {
+          if (el.shadowRoot) hosts.push(el);
+        }
+        for (const host of hosts) collect(host.shadowRoot as ShadowRoot, true);
+      };
+      collect(root, false);
+      return out;
+    }, scopeSelector ?? null)
     .catch(() => null);
+  if (!links) return null;
+  return selectPrivacyPolicyUrl(links, LOCALE_VOCAB.privacyUrl, LOCALE_VOCAB.privacyText);
 }
 
 /**
