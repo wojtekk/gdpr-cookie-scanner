@@ -11,7 +11,8 @@ export const sv: LocaleData = {
     accept: /(?<![\p{L}\p{M}])(godkänn|acceptera alla|tillåt alla)/iu,
     reject:
       /(?<![\p{L}\p{M}])(avvisa|neka(?![\p{L}\p{M}])|endast nödvändiga|nej tack(?![\p{L}\p{M}])|fortsätt utan att godkänn)/iu,
-    preferences: /inställning|(?<![\p{L}\p{M}])(hantera|anpassa)/iu,
+    // Imperative only: the end is anchored so "hanterar", "anpassade annonser" are not settings.
+    preferences: /inställning|(?<![\p{L}\p{M}])(hantera|anpassa)(?![\p{L}\p{M}])/iu,
     // "Hantera eller avvisa", "Avvisa eller anpassa": preferences verb + eller + reject verb, either order.
     combinedPreferences:
       /(?<![\p{L}\p{M}])(hantera|anpassa)\s+eller\s+(avvisa|neka)|(?<![\p{L}\p{M}])(avvisa|neka)\s+eller\s+(hantera|anpassa)/iu,

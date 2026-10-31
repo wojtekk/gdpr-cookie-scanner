@@ -14,7 +14,10 @@ export const da: LocaleData = {
     reject:
       /(?<![\p{L}\p{M}])(afvis|fravælg|kun nødvendige|nej tak(?![\p{L}\p{M}])|fortsæt uden at accept)/iu,
     // "udvalgte": "Tillad udvalgte" is a preferences choice, not accept-all.
-    preferences: /indstilling|(?<![\p{L}\p{M}])(administrer|tilpas|udvalgte)/iu,
+    // `administrer`/`tilpas` also anchor the end ("tilpasset annoncering" is not settings).
+    // `udvalgte` is already a whole word; a trailing anchor cannot separate "Tillad udvalgte"
+    // from "udvalgte annoncer".
+    preferences: /indstilling|(?<![\p{L}\p{M}])((administrer|tilpas)(?![\p{L}\p{M}])|udvalgte)/iu,
     // "Tilpas eller afvis", "Afvis eller tilpas": preferences verb + eller + reject verb, either order.
     combinedPreferences:
       /(?<![\p{L}\p{M}])(tilpas|administrer)\s+eller\s+(afvis|fravælg)|(?<![\p{L}\p{M}])(afvis|fravælg)\s+eller\s+(tilpas|administrer)/iu,

@@ -10,7 +10,9 @@ export const fi: LocaleData = {
     accept: /\b(hyväksy|salli kaikki)/i,
     reject:
       /\bhylkää|\bkieltäydy|\bvain (välttämättömät|pakolliset)|\bei kiitos\b|\bjatka ilman hyväksy/i,
-    preferences: /asetukset|\bhallitse|\bmukauta|\bmuokkaa/i,
+    // Imperative only, end anchored: "hallitsevat", "muokkaamme", "mukautan" are running text.
+    // `u` flag for the Unicode-aware lookahead (ä ö are not `\w`).
+    preferences: /asetukset|\b(hallitse|mukauta|muokkaa)(?![\p{L}\p{M}])/iu,
     // "Muokkaa tai kiellä", "Hylkää tai muokkaa": preferences verb + tai + reject verb, either order.
     combinedPreferences:
       /\b(muokkaa|hallitse|mukauta)\s+tai\s+(kiellä|hylkää|kieltäydy)|\b(hylkää|kiellä|kieltäydy)\s+tai\s+(muokkaa|hallitse|mukauta)/i,
