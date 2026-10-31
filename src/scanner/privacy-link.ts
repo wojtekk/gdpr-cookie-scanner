@@ -52,7 +52,7 @@ export function selectPrivacyPolicyUrl(
   const textRes = textPatterns.map((p) => new RegExp(p, "i"));
 
   const matches = (link: LinkCandidate): boolean => {
-    if (isSkippedHref(link.href)) return false;
+    if (typeof link.href !== "string" || isSkippedHref(link.href)) return false;
     const text = link.text.normalize("NFC").trim();
     if (isSettingsLink(link.href, text)) return false;
     return urlRes.some((r) => r.test(link.href)) || textRes.some((r) => r.test(text));

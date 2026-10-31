@@ -232,4 +232,14 @@ describe("selectPrivacyPolicyUrl", () => {
   test("every privacy URL stem is ASCII", () => {
     for (const p of aggregateLocales().privacyUrl) expect(p).toMatch(/^[\x00-\x7f]*$/);
   });
+
+  test("skips a candidate whose href is not a string", () => {
+    const bad = { href: {}, text: "Privacy Policy", inShadow: false } as unknown as LinkCandidate;
+    const good: LinkCandidate = {
+      href: "https://example.com/privacy-policy",
+      text: "Privacy Policy",
+      inShadow: false,
+    };
+    expect(selectPrivacyPolicyUrl([bad, good], agg.privacyUrl, agg.privacyText)).toBe(good.href);
+  });
 });

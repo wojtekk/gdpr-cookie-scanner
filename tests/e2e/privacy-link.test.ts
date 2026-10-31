@@ -95,4 +95,11 @@ describe("findPrivacyPolicyUrl shadow DOM", () => {
     );
     expect(result).toBe(VALID);
   });
+
+  it("ignores inline SVG anchors (non-string href) without throwing", async () => {
+    const result = await find(
+      `<svg width="10" height="10"><a href="/logo"><rect width="10" height="10"/></a></svg>${LIGHT}`,
+    );
+    expect(result).toBe(VALID);
+  });
 });
