@@ -1,6 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { analyzeButtonWording, analyzeModalText } from "../../src/analyzers/wording.js";
 import type { ConsentButton } from "../../src/types.js";
+import { getLocale } from "../../src/locales/index.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -321,5 +322,47 @@ describe("Norwegian consent wording", () => {
   it("does not match 'endre' inside French 'rendre'", () => {
     const result = analyzeModalText("Vous pouvez rendre visite");
     expect(result.missingInfo).toContain("withdrawal");
+  });
+});
+
+describe("Danish consent wording", () => {
+  it("flags 'Fortsæt uden at acceptere' as an indirect reject label", () => {
+    const result = analyzeButtonWording([makeButton("reject", "Fortsæt uden at acceptere")]);
+    expect(result.hasIndirectRejectLabel).toBe(true);
+  });
+
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const INFO_CASES: Array<[string, string]> = [
+    ["formål", "purposes"],
+    ["reklamepartnere", "third-parties"],
+    ["tredjepart", "third-parties"],
+    ["ændre", "withdrawal"],
+    ["tilbagekalde", "withdrawal"],
+    ["trække samtykket tilbage", "withdrawal"],
+  ];
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the start of the text", (stem, key) => {
+    const result = analyzeModalText(`${cap(stem)} hjemmesiden`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the end of the text", (stem, key) => {
+    const result = analyzeModalText(`Hjemmesiden ${cap(stem)}`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each([
+    "Vi bruger cookies",
+    "Vi bruger cookies. Andre cookies er nødvendige for at hjemmesiden fungerer.",
+  ])("reports all three concepts missing for '%s'", (text) => {
+    const result = analyzeModalText(text);
+    expect(result.missingInfo).toEqual(
+      expect.arrayContaining(["purposes", "third-parties", "withdrawal"]),
+    );
+  });
+
+  it("Danish partner stems do not match German 'Partnerentwicklung'", () => {
+    const patterns = getLocale("da")!.info["third-parties"];
+    expect(patterns.some((r) => r.test("Partnerentwicklung und Marketing"))).toBe(false);
   });
 });

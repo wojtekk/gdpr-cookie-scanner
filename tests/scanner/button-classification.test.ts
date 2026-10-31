@@ -416,3 +416,44 @@ describe("classifyButtonText — no", () => {
     expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
   });
 });
+
+describe("classifyButtonText — da", () => {
+  it.each(["Tillad alle", "TILLAD ALLE", "Accepter alle", "Godkend", "Godkend alle"])(
+    'classifies "%s" as accept',
+    (label) => {
+      expect(classifyButtonText(label, "da")).toBe("accept");
+    },
+  );
+
+  it.each([
+    "Afvis alle",
+    "Afvis",
+    "Fravælg",
+    "FRAVÆLG",
+    "Fravælg".normalize("NFD"),
+    "Kun nødvendige",
+    "Nej tak",
+    "Fortsæt uden at acceptere",
+  ])('classifies "%s" as reject', (label) => {
+    expect(classifyButtonText(label, "da")).toBe("reject");
+  });
+
+  it.each([
+    "Tilpas eller afvis",
+    "Afvis eller tilpas",
+    "Indstillinger",
+    "Cookieindstillinger",
+    "Tillad udvalgte",
+    "Tilpas tjenester",
+  ])('classifies "%s" as preferences', (label) => {
+    expect(classifyButtonText(label, "da")).toBe("preferences");
+  });
+
+  it('does not classify "Nødvendige cookies" as reject', () => {
+    expect(classifyButtonText("Nødvendige cookies", "da")).not.toBe("reject");
+  });
+
+  it('keeps English "Manage or reject" as reject', () => {
+    expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
+  });
+});
