@@ -95,6 +95,7 @@ export const BUTTON_CORPUS: readonly string[] = [
     "Continue without accepting",
     "Continue without consent",
     "Continuar sin aceptar",
+    "Accepter",
     // whitespace normalisation
     "Tout\nrefuser",
     "Accept\nall",
