@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kompatibelt testwebsted</title>
+  </head>
+  <body>
+    <main>
+      <h1>Velkommen til vores websted</h1>
+    </main>
+
+    <footer>
+      <a href="/legal/da-footer">Persondatapolitik</a>
+    </footer>
+
+    <div
+      id="cookie-banner"
+      style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1a1a2e;
+        color: #fff;
+        padding: 20px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      "
+    >
+      <p style="flex: 1; margin: 0">
+        Vi bruger cookies til analyse og andre <strong>formål</strong> sammen med
+        <strong>tredjepart</strong>. Cookies gemmes i <strong>13 måneder</strong>. Du kan til enhver
+        tid <strong>ændre eller trække</strong> dit samtykke <strong>tilbage</strong>.
+        <a href="/legal/da-modal" style="color: #90e0ef">Privatlivspolitik</a>.
+      </p>
+      <button
+        id="reject-btn"
+        style="
+          padding: 10px 20px;
+          background: transparent;
+          color: #fff;
+          border: 1px solid #fff;
+          cursor: pointer;
+          font-size: 14px;
+        "
+      >
+        Afvis alle
+      </button>
+      <button
+        id="accept-btn"
+        style="
+          padding: 10px 20px;
+          background: #4caf50;
+          color: #fff;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+        "
+      >
+        Tillad alle
+      </button>
+    </div>
+
+    <script>
+      document.getElementById("accept-btn").addEventListener("click", function () {
+        document.getElementById("cookie-banner").style.display = "none";
+        document.cookie = "consent=accepted; path=/; max-age=31536000";
+      });
+
+      document.getElementById("reject-btn").addEventListener("click", function () {
+        document.getElementById("cookie-banner").style.display = "none";
+        document.cookie = "consent=rejected; path=/; max-age=31536000";
+      });
+    </script>
+  </body>
+</html>
