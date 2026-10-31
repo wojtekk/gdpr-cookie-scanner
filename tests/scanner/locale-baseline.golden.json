@@ -80,6 +80,7 @@
     "Continue without accepting": "reject",
     "Continue without consent": "reject",
     "Continuar sin aceptar": "reject",
+    "Accepter": "accept",
     "Tout\nrefuser": "reject",
     "Accept\nall": "accept",
     "Reject\tall": "reject",

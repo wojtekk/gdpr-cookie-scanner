@@ -66,6 +66,7 @@ describe("findPrivacyPolicyUrl baseline", () => {
   });
 
   describe("pins of today's behaviour", () => {
+    // On setContent pages the href resolves to "about:blank#", so the `href === "#"` guard never fires.
     it('href="#" is not skipped when the browser resolves it to a full URL', async () => {
       const result = await find('<a href="#">Privacy Policy</a>');
       expect(result).toBe("about:blank#");
