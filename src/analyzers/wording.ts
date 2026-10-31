@@ -107,10 +107,11 @@ export function analyzeButtonWording(buttons: ConsentButton[]): WordingAnalysis 
   };
 }
 
-export function analyzeModalText(text: string): {
+export function analyzeModalText(rawText: string): {
   missingInfo: string[];
   issues: DarkPatternIssue[];
 } {
+  const text = rawText.normalize("NFC");
   const missingInfo: string[] = [];
   const issues: DarkPatternIssue[] = [];
 

@@ -271,3 +271,9 @@ describe("classifyButtonText — whitespace normalisation", () => {
     expect(classifyButtonText(" Accept\n\tall ", "en")).toBe("accept");
   });
 });
+
+describe("classifyButtonText — Unicode normalisation", () => {
+  it("matches decomposed (NFD) accents", () => {
+    expect(classifyButtonText("Nécessaires uniquement".normalize("NFD"), "fr")).toBe("reject");
+  });
+});
