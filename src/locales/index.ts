@@ -8,10 +8,11 @@ import { nl } from "./nl.js";
 import { pl } from "./pl.js";
 import { pt } from "./pt.js";
 import { fi } from "./fi.js";
+import { sv } from "./sv.js";
 
 export type { InfoKey, LocaleData } from "./types.js";
 
-export const LOCALES: readonly LocaleData[] = [en, fr, de, es, it, nl, pl, pt, fi];
+export const LOCALES: readonly LocaleData[] = [en, fr, de, es, it, nl, pl, pt, fi, sv];
 
 export function getLocale(code: string): LocaleData | undefined {
   return LOCALES.find((l) => l.code === code);

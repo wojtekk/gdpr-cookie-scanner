@@ -236,3 +236,46 @@ describe("Finnish consent wording", () => {
     );
   });
 });
+
+describe("Swedish consent wording", () => {
+  it("flags 'Fortsätt utan att godkänna' as an indirect reject label", () => {
+    const result = analyzeButtonWording([makeButton("reject", "Fortsätt utan att godkänna")]);
+    expect(result.hasIndirectRejectLabel).toBe(true);
+  });
+
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const INFO_CASES: Array<[string, string]> = [
+    ["ändamål", "purposes"],
+    ["våra partners", "third-parties"],
+    ["samarbetspartners", "third-parties"],
+    ["tredje part", "third-parties"],
+    ["ändra", "withdrawal"],
+    ["återkalla", "withdrawal"],
+    ["dra tillbaka", "withdrawal"],
+  ];
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the start of the text", (stem, key) => {
+    const result = analyzeModalText(`${cap(stem)} webbplatsen`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the end of the text", (stem, key) => {
+    const result = analyzeModalText(`Webbplatsen ${cap(stem)}`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it("finds decomposed (NFD) text", () => {
+    const result = analyzeModalText("Vi använder cookies för ändamål".normalize("NFD"));
+    expect(result.missingInfo).not.toContain("purposes");
+  });
+
+  it.each([
+    "Vi använder cookies",
+    "Vi använder cookies. Andra cookies är nödvändiga för att webbplatsen ska fungera.",
+  ])("reports all three concepts missing for '%s'", (text) => {
+    const result = analyzeModalText(text);
+    expect(result.missingInfo).toEqual(
+      expect.arrayContaining(["purposes", "third-parties", "withdrawal"]),
+    );
+  });
+});

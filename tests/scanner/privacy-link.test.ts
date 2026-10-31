@@ -155,6 +155,31 @@ describe("selectPrivacyPolicyUrl", () => {
     });
   });
 
+  describe("Swedish policy links", () => {
+    test.each(["Personuppgifts- och cookiepolicy", "Integritetspolicy", "Personuppgiftspolicy"])(
+      "text '%s' matches",
+      (text) => {
+        expect(pick([{ href: "/x/1", text }])).toBe("/x/1");
+      },
+    );
+
+    test("URL matches", () => {
+      const href = "https://example.se/integritetspolicy";
+      expect(pick([{ href }])).toBe(href);
+    });
+
+    test.each(["Integritetsinställningar", "Radera personuppgifter"])(
+      "text '%s' does not match",
+      (text) => {
+        expect(pick([{ href: "/x/1", text }])).toBeNull();
+      },
+    );
+
+    test("percent-encoded settings URL does not match", () => {
+      expect(pick([{ href: "https://example.se/integritetsinst%C3%A4llningar" }])).toBeNull();
+    });
+  });
+
   test("every privacy URL stem is ASCII", () => {
     for (const p of aggregateLocales().privacyUrl) expect(p).toMatch(/^[\x00-\x7f]*$/);
   });
