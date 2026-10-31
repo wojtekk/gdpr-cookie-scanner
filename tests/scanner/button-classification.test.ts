@@ -320,3 +320,46 @@ describe("classifyButtonText — fi", () => {
     expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
   });
 });
+
+describe("classifyButtonText — sv", () => {
+  it.each([
+    "Godkänn alla",
+    "GODKÄNN ALLA",
+    "Godkänn alla".normalize("NFD"),
+    "Godkänn",
+    "Acceptera alla",
+    "Jag godkänner",
+    "Tillåt alla",
+  ])('classifies "%s" as accept', (label) => {
+    expect(classifyButtonText(label, "sv")).toBe("accept");
+  });
+
+  it.each([
+    "Avvisa alla",
+    "Avvisa",
+    "Neka",
+    "Nej tack",
+    "Endast nödvändiga",
+    "Fortsätt utan att godkänna",
+  ])('classifies "%s" as reject', (label) => {
+    expect(classifyButtonText(label, "sv")).toBe("reject");
+  });
+
+  it.each([
+    "Hantera eller avvisa",
+    "Avvisa eller anpassa",
+    "Inställningar",
+    "Cookieinställningar",
+    "Anpassa",
+  ])('classifies "%s" as preferences', (label) => {
+    expect(classifyButtonText(label, "sv")).toBe("preferences");
+  });
+
+  it('does not classify "Nödvändiga cookies" as reject', () => {
+    expect(classifyButtonText("Nödvändiga cookies", "sv")).not.toBe("reject");
+  });
+
+  it('keeps English "Manage or reject" as reject', () => {
+    expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
+  });
+});
