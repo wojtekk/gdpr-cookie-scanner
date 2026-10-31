@@ -75,8 +75,10 @@ export async function findPrivacyPolicyUrl(
       const out: LinkCandidate[] = [];
       const collect = (node: Element | Document | ShadowRoot, inShadow: boolean): void => {
         for (const link of node.querySelectorAll("a[href]")) {
+          // SVG anchors expose an SVGAnimatedString here (serialises to {}); treat as empty.
+          const raw: unknown = (link as HTMLAnchorElement).href;
           out.push({
-            href: (link as HTMLAnchorElement).href ?? "",
+            href: typeof raw === "string" ? raw : "",
             text: link.textContent ?? "",
             inShadow,
           });
