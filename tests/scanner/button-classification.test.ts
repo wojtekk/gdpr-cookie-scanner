@@ -312,6 +312,17 @@ describe("classifyButtonText — fi", () => {
     expect(classifyButtonText(label, "fi")).toBe("preferences");
   });
 
+  it('classifies "Muokkaa" as preferences', () => {
+    expect(classifyButtonText("Muokkaa", "fi")).toBe("preferences");
+  });
+
+  it.each(["Kumppanimme hallitsevat tietojasi", "Muokkaamme mainoksia", "Mukautan sisältöä"])(
+    'does not classify inflected "%s" as preferences',
+    (label) => {
+      expect(classifyButtonText(label, "fi")).toBe("unknown");
+    },
+  );
+
   it.each(["Kiellä", "Välttämättömät evästeet"])('does not classify "%s" as reject', (label) => {
     expect(classifyButtonText(label, "fi")).not.toBe("reject");
   });
@@ -359,6 +370,17 @@ describe("classifyButtonText — sv", () => {
     expect(classifyButtonText("Nödvändiga cookies", "sv")).not.toBe("reject");
   });
 
+  it('classifies "Hantera" as preferences', () => {
+    expect(classifyButtonText("Hantera", "sv")).toBe("preferences");
+  });
+
+  it.each(["Anpassade annonser och anpassat innehåll", "Vi hanterar dina uppgifter"])(
+    'does not classify inflected "%s" as preferences',
+    (label) => {
+      expect(classifyButtonText(label, "sv")).toBe("unknown");
+    },
+  );
+
   it('keeps English "Manage or reject" as reject', () => {
     expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
   });
@@ -397,6 +419,31 @@ describe("classifyButtonText — no", () => {
   it('does not classify "Nødvendige cookies" as reject', () => {
     expect(classifyButtonText("Nødvendige cookies", "no")).not.toBe("reject");
   });
+
+  // Sourcepoint (Finn) renders purpose descriptions as <button>s. An unanchored `tilpass`
+  // stem made "tilpasset"/"tilpassing" look like the settings button and got it clicked.
+  it.each([
+    ["Lagre og/eller få tilgang til informasjon på en enhet", "unknown"],
+    [
+      "Personlig tilpasset annonsering, annonseringsmåling, publikumsundersøkelser og tjenesteutvikling",
+      "unknown",
+    ],
+    [
+      "Produktutvikling, personlig tilpassing, markedsføring (inkludert Google, Meta og Snap) og annonsering utført av Vend",
+      "unknown",
+    ],
+    ["Godta alle", "accept"],
+    ["Tilpass eller avvis", "preferences"],
+  ])('classifies Sourcepoint label "%s" as %s (nb)', (label, expected) => {
+    expect(classifyButtonText(label, "nb")).toBe(expected);
+  });
+
+  it.each(["Tilpassede annonser", "Administrerte tjenester"])(
+    'does not classify inflected "%s" as preferences',
+    (label) => {
+      expect(classifyButtonText(label, "no")).toBe("unknown");
+    },
+  );
 
   describe("Nynorsk (assumed vocabulary)", () => {
     it('classifies "Innstillingar" as preferences', () => {
@@ -452,6 +499,17 @@ describe("classifyButtonText — da", () => {
   it('does not classify "Nødvendige cookies" as reject', () => {
     expect(classifyButtonText("Nødvendige cookies", "da")).not.toBe("reject");
   });
+
+  it('classifies "Tilpas" as preferences', () => {
+    expect(classifyButtonText("Tilpas", "da")).toBe("preferences");
+  });
+
+  it.each(["Personligt tilpassede annoncer og indhold", "Tilpasset annoncering"])(
+    'does not classify inflected "%s" as preferences',
+    (label) => {
+      expect(classifyButtonText(label, "da")).toBe("unknown");
+    },
+  );
 
   it('keeps English "Manage or reject" as reject', () => {
     expect(classifyButtonText("Manage or reject", "en")).toBe("reject");

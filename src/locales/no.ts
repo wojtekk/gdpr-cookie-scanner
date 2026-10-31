@@ -13,7 +13,9 @@ export const no: LocaleData = {
     accept: /(?<![\p{L}\p{M}])(godta|aksepter|tillat alle)/iu,
     reject:
       /(?<![\p{L}\p{M}])(avvis|avslå|kun nødvendige|bare nødvendige|berre naudsynte|nei takk(?![\p{L}\p{M}])|fortsett uten å godta|fortset utan å godta)/iu,
-    preferences: /innstilling|(?<![\p{L}\p{M}])(administrer|tilpass)/iu,
+    // Imperative only: `tilpass`/`administrer` also anchor the end, so purpose descriptions
+    // rendered as buttons ("personlig tilpasset annonsering") are not taken for settings.
+    preferences: /innstilling|(?<![\p{L}\p{M}])(administrer|tilpass)(?![\p{L}\p{M}])/iu,
     // "Tilpass eller avvis", "Avvis eller tilpass": preferences verb + eller + reject verb, either order.
     combinedPreferences:
       /(?<![\p{L}\p{M}])(tilpass|administrer)\s+eller\s+(avvis|avslå)|(?<![\p{L}\p{M}])(avvis|avslå)\s+eller\s+(tilpass|administrer)/iu,
