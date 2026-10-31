@@ -196,3 +196,43 @@ describe("analyzeModalText", () => {
     expect(result.missingInfo).not.toContain("withdrawal");
   });
 });
+
+describe("Finnish consent wording", () => {
+  it("flags 'Jatka ilman hyväksymistä' as an indirect reject label", () => {
+    const result = analyzeButtonWording([makeButton("reject", "Jatka ilman hyväksymistä")]);
+    expect(result.hasIndirectRejectLabel).toBe(true);
+  });
+
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const INFO_CASES: Array<[string, string]> = [
+    ["tarkoituksiin", "purposes"],
+    ["mainontakumppania", "third-parties"],
+    ["kumppaneiden", "third-parties"],
+    ["kolmannet osapuolet", "third-parties"],
+    ["kolmansille osapuolille", "third-parties"],
+    ["kolmansien osapuolten", "third-parties"],
+    ["muuttaa", "withdrawal"],
+    ["peruuttaa", "withdrawal"],
+    ["peruutan", "withdrawal"],
+  ];
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the start of the text", (stem, key) => {
+    const result = analyzeModalText(`${cap(stem)} sivusto`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the end of the text", (stem, key) => {
+    const result = analyzeModalText(`Sivusto ${cap(stem)}`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each([
+    "Käytämme evästeitä",
+    "Käytämme evästeitä. Muut evästeet ovat välttämättömiä sivuston toiminnalle.",
+  ])("reports all three concepts missing for '%s'", (text) => {
+    const result = analyzeModalText(text);
+    expect(result.missingInfo).toEqual(
+      expect.arrayContaining(["purposes", "third-parties", "withdrawal"]),
+    );
+  });
+});
