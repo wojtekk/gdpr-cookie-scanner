@@ -321,6 +321,8 @@ All formats contain:
 - Targeted recommendations
 - Legal references (RGPD, ePrivacy directive, CEPD guidelines, CNIL 2022)
 
+Consent UIs are recognised in English, French, German, Spanish, Italian, Dutch, Polish, Portuguese, Finnish, Swedish, Norwegian (Bokmål and Nynorsk) and Danish. Modals rendered in cross-origin iframes are not read yet.
+
 ### IAB TCF detection
 
 When a site uses the [IAB Transparency & Consent Framework](https://iabeurope.eu/tcf-2-0/), the scanner automatically detects and decodes it. This is **informational only** — it does not affect the compliance score.
