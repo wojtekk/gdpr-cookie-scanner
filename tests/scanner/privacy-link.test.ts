@@ -1,0 +1,137 @@
+import { describe, expect, test } from "bun:test";
+import { selectPrivacyPolicyUrl, type LinkCandidate } from "../../src/scanner/privacy-link.js";
+import { aggregateLocales } from "../../src/locales/index.js";
+
+const agg = aggregateLocales();
+const EXPLICIT_URL = ["tietosuoja", "privacy", "integritet"];
+const EXPLICIT_TEXT = ["tietosuoja", "privacy", "integritet"];
+
+function pick(
+  links: Array<Partial<LinkCandidate> & { href: string }>,
+  urlPats: string[] = agg.privacyUrl,
+  textPats: string[] = agg.privacyText,
+): string | null {
+  return selectPrivacyPolicyUrl(
+    links.map((l) => ({ text: "", inShadow: false, ...l })),
+    urlPats,
+    textPats,
+  );
+}
+
+describe("selectPrivacyPolicyUrl", () => {
+  test("narrow /privacy/ stem returns a policy URL but not settings", () => {
+    expect(pick([{ href: "https://vend.com/privacy/fi-policy" }])).toBe(
+      "https://vend.com/privacy/fi-policy",
+    );
+    expect(pick([{ href: "https://vend.com/privacy/settings" }])).toBeNull();
+  });
+
+  describe("Nordic settings links are dropped", () => {
+    test("Tietosuoja-asetukset text on a privacysettings host", () => {
+      expect(
+        pick(
+          [{ href: "https://privacysettings.vend.fi/privacy", text: "Tietosuoja-asetukset" }],
+          EXPLICIT_URL,
+          EXPLICIT_TEXT,
+        ),
+      ).toBeNull();
+    });
+
+    test("percent-encoded URL path", () => {
+      expect(
+        pick(
+          [{ href: "https://example.se/integritetsinst%C3%A4llningar" }],
+          EXPLICIT_URL,
+          EXPLICIT_TEXT,
+        ),
+      ).toBeNull();
+    });
+
+    test("NFD text", () => {
+      expect(
+        pick(
+          [{ href: "https://example.se/x", text: "Integritetsinställningar".normalize("NFD") }],
+          EXPLICIT_URL,
+          EXPLICIT_TEXT,
+        ),
+      ).toBeNull();
+    });
+
+    test("mixed list returns the policy link", () => {
+      expect(
+        pick(
+          [
+            { href: "https://example.se/a", text: "Integritetsinställningar" },
+            { href: "https://example.se/policy", text: "Integritetspolicy" },
+          ],
+          EXPLICIT_URL,
+          EXPLICIT_TEXT,
+        ),
+      ).toBe("https://example.se/policy");
+    });
+
+    test("Tori Mainosasetukset", () => {
+      expect(
+        pick(
+          [{ href: "https://tori.fi/privacy", text: "Mainosasetukset" }],
+          EXPLICIT_URL,
+          EXPLICIT_TEXT,
+        ),
+      ).toBeNull();
+    });
+
+    test("settings host name drops the link", () => {
+      expect(
+        pick(
+          [{ href: "https://privacysettings.vend.fi/", text: "Tietosuoja" }],
+          EXPLICIT_URL,
+          EXPLICIT_TEXT,
+        ),
+      ).toBeNull();
+    });
+  });
+
+  describe("English stays as today", () => {
+    test("policy and cookie settings text is returned", () => {
+      expect(pick([{ href: "/privacy", text: "Privacy Policy & Cookie Settings" }])).toBe(
+        "/privacy",
+      );
+    });
+
+    test("settings in the path is returned", () => {
+      const href = "https://example.com/account/settings/privacy-policy";
+      expect(pick([{ href, text: "Privacy Policy" }])).toBe(href);
+    });
+  });
+
+  describe("light DOM wins over shadow DOM", () => {
+    test("shadow listed before light returns the light link", () => {
+      expect(
+        pick([
+          { href: "https://example.com/shadow", text: "Privacy Policy", inShadow: true },
+          { href: "https://example.com/light", text: "Privacy Policy" },
+        ]),
+      ).toBe("https://example.com/light");
+    });
+
+    test("only a shadow candidate is returned", () => {
+      expect(
+        pick([{ href: "https://example.com/shadow", text: "Privacy Policy", inShadow: true }]),
+      ).toBe("https://example.com/shadow");
+    });
+  });
+
+  test("javascript: is skipped", () => {
+    expect(pick([{ href: "javascript:void(0)", text: "Privacy Policy" }])).toBeNull();
+  });
+
+  test("NFD text-only match (Mentions légales)", () => {
+    expect(pick([{ href: "/legal/1", text: "Mentions légales".normalize("NFD") }])).toBe(
+      "/legal/1",
+    );
+  });
+
+  test("every privacy URL stem is ASCII", () => {
+    for (const p of aggregateLocales().privacyUrl) expect(p).toMatch(/^[\x00-\x7f]*$/);
+  });
+});

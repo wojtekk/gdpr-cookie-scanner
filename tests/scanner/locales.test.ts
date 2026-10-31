@@ -15,6 +15,7 @@ const OLD_PRIVACY_URL = [
   "privacidad",
   "data[_-]?protection",
   "data[_-]?privacy",
+  "/privacy/([a-z]{2}-)?polic", // added in Task 5 (the only intended change to the old list)
 ];
 
 const OLD_PRIVACY_TEXT = [
