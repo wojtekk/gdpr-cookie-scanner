@@ -131,6 +131,30 @@ describe("selectPrivacyPolicyUrl", () => {
     );
   });
 
+  describe("Finnish policy links", () => {
+    test.each([
+      "Tietosuojakäytäntö",
+      "Tietosuojakäytännön",
+      "TIETOSUOJAKÄYTÄNTÖ",
+      "Tietosuoja- ja evästekäytäntö",
+      "Tietosuojaseloste",
+      "Rekisteriseloste",
+    ])("text '%s' matches", (text) => {
+      expect(pick([{ href: "/x/1", text }])).toBe("/x/1");
+    });
+
+    test.each([
+      "https://example.fi/tietosuojakaytanto",
+      "https://example.fi/tietosuojak%C3%A4yt%C3%A4nt%C3%B6",
+    ])("URL %s matches", (href) => {
+      expect(pick([{ href }])).toBe(href);
+    });
+
+    test.each(["Tietosuojavastaava", "Poista tietoni"])("text '%s' does not match", (text) => {
+      expect(pick([{ href: "/x/1", text }])).toBeNull();
+    });
+  });
+
   test("every privacy URL stem is ASCII", () => {
     for (const p of aggregateLocales().privacyUrl) expect(p).toMatch(/^[\x00-\x7f]*$/);
   });

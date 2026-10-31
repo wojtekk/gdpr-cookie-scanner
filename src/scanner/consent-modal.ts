@@ -110,11 +110,13 @@ function resolveButtonPatterns(_lang: string | null): {
   accept: RegExp[];
   reject: RegExp[];
   preferences: RegExp[];
+  combinedPreferences: RegExp[];
 } {
   return {
     accept: LOCALE_VOCAB.accept,
     reject: LOCALE_VOCAB.reject,
     preferences: LOCALE_VOCAB.preferences,
+    combinedPreferences: LOCALE_VOCAB.combinedPreferences,
   };
 }
 
@@ -139,8 +141,8 @@ function normalizeText(raw: string): string {
  * <html lang>, or null when the language is undetermined.
  */
 export function classifyButtonText(text: string, lang: string | null): ConsentButtonType {
-  const { accept, reject, preferences } = resolveButtonPatterns(lang);
-  return classifyButtonType(normalizeText(text), accept, reject, preferences);
+  const { accept, reject, preferences, combinedPreferences } = resolveButtonPatterns(lang);
+  return classifyButtonType(normalizeText(text), accept, reject, preferences, combinedPreferences);
 }
 
 export async function detectConsentModal(page: Page, options: ScanOptions): Promise<ConsentModal> {
@@ -257,7 +259,7 @@ async function extractButtons(
   modalSelector: string,
   lang: string | null,
 ): Promise<ConsentButton[]> {
-  const { accept, reject, preferences } = resolveButtonPatterns(lang);
+  const { accept, reject, preferences, combinedPreferences } = resolveButtonPatterns(lang);
   const buttonEls = await page.$$(
     [
       `${modalSelector} button`,
@@ -295,7 +297,7 @@ async function extractButtons(
         };
       });
 
-      const type = classifyButtonType(text, accept, reject, preferences);
+      const type = classifyButtonType(text, accept, reject, preferences, combinedPreferences);
 
       // Build a unique selector for this button.
       // Prefer a class-based selector only when it uniquely identifies the element;
@@ -387,7 +389,10 @@ function classifyButtonType(
   accept: RegExp[],
   reject: RegExp[],
   preferences: RegExp[],
+  combinedPreferences: RegExp[],
 ): ConsentButtonType {
+  // Combined "manage or reject" labels open the second layer; test them before reject.
+  if (combinedPreferences.some((p) => p.test(text))) return "preferences";
   // Reject is tested first: phrases like "continuer sans accepter" contain "accepter"
   // which would otherwise match the accept pattern before reaching the reject pattern.
   if (reject.some((p) => p.test(text))) return "reject";

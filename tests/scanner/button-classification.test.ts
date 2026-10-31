@@ -277,3 +277,46 @@ describe("classifyButtonText — Unicode normalisation", () => {
     expect(classifyButtonText("Nécessaires uniquement".normalize("NFD"), "fr")).toBe("reject");
   });
 });
+
+describe("classifyButtonText — fi", () => {
+  it.each(["Hyväksy kaikki", "HYVÄKSY KAIKKI", "Salli kaikki", "Hyväksyn", "Hyväksyn kaikki"])(
+    'classifies "%s" as accept',
+    (label) => {
+      expect(classifyButtonText(label, "fi")).toBe("accept");
+    },
+  );
+
+  it.each([
+    "Hylkää kaikki",
+    "HYLKÄÄ KAIKKI",
+    "Hylkää",
+    "Hylkää kaikki".normalize("NFD"),
+    "Kieltäydy",
+    "Vain välttämättömät",
+    "Vain pakolliset",
+    "Ei kiitos",
+    "Jatka ilman hyväksymistä",
+  ])('classifies "%s" as reject', (label) => {
+    expect(classifyButtonText(label, "fi")).toBe("reject");
+  });
+
+  it.each([
+    "Muokkaa tai kiellä",
+    "Hylkää tai muokkaa",
+    "Hallitse tai hylkää",
+    "Asetukset",
+    "Evästeasetukset",
+    "Hallitse",
+    "Mukauta",
+  ])('classifies "%s" as preferences', (label) => {
+    expect(classifyButtonText(label, "fi")).toBe("preferences");
+  });
+
+  it.each(["Kiellä", "Välttämättömät evästeet"])('does not classify "%s" as reject', (label) => {
+    expect(classifyButtonText(label, "fi")).not.toBe("reject");
+  });
+
+  it('keeps English "Manage or reject" as reject', () => {
+    expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
+  });
+});
