@@ -131,6 +131,7 @@ function resolveButtonPatterns(_lang: string | null): {
  */
 function normalizeText(raw: string): string {
   return raw
+    .normalize("NFC")
     .replace(/([a-z])([A-Z])/g, "$1 $2") // "accepterArrowRightIcon" → "accepter Arrow Right Icon"
     .replace(/\s+/g, " ")
     .trim();
