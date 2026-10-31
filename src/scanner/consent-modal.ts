@@ -2,6 +2,9 @@ import type { Page } from "playwright";
 import type { ConsentModal, ConsentButton, ConsentCheckbox, ConsentButtonType } from "../types.js";
 import { analyzeButtonWording } from "../analyzers/wording.js";
 import type { ScanOptions } from "../types.js";
+import { aggregateLocales } from "../locales/index.js";
+
+const LOCALE_VOCAB = aggregateLocales();
 
 /**
  * Selectors for well-known CMP platforms.
@@ -54,31 +57,6 @@ const HEURISTIC_SELECTORS = [
   "[role='alertdialog']",
 ];
 
-const PRIVACY_POLICY_URL_PATTERNS = [
-  "privacy[_-]?polic",
-  "politique[_-]?(de[_-])?confidentialit",
-  "politique[_-]?(de[_-])?vie[_-]?priv",
-  "confidentialit",
-  "vie[_-]?priv",
-  "mentions[_-]?l.gales",
-  "datenschutz",
-  "privacidad",
-  "data[_-]?protection",
-  "data[_-]?privacy",
-];
-
-const PRIVACY_POLICY_TEXT_PATTERNS = [
-  "privacy\\s+polic",
-  "politique\\s+(de\\s+)?confidentialit",
-  "politique\\s+(de\\s+)?vie\\s+priv",
-  "confidentialit",
-  "vie\\s+priv",
-  "mentions?\\s+l.gales?",
-  "datenschutz",
-  "privacidad",
-  "data\\s+protection",
-];
-
 /**
  * Find a privacy policy link within a given scope (modal selector) or the full page.
  * Returns the absolute URL of the first matching link, or null.
@@ -115,76 +93,12 @@ export async function findPrivacyPolicyUrl(
       },
       {
         scope: scopeSelector ?? null,
-        urlPats: PRIVACY_POLICY_URL_PATTERNS,
-        textPats: PRIVACY_POLICY_TEXT_PATTERNS,
+        urlPats: LOCALE_VOCAB.privacyUrl,
+        textPats: LOCALE_VOCAB.privacyText,
       },
     )
     .catch(() => null);
 }
-
-type ButtonPatternSet = { accept: RegExp; reject: RegExp; preferences: RegExp };
-
-/**
- * Button label patterns keyed by BCP 47 primary-language subtag.
- * English is always included as a fallback when the page language is known.
- * When the language is unknown all locales are tested.
- */
-const PATTERNS_BY_LOCALE: Record<string, ButtonPatternSet> = {
-  en: {
-    // "continue" removed: too ambiguous ("Continue without accepting" must stay reject)
-    accept:
-      /\b(accept|accept all|allow all|enable all|agree|ok|i accept|i agree|i consent|allow cookies)\b/i,
-    reject:
-      /\b(refuse|reject|reject all|deny|decline|decline all|no thanks|skip|opt[- ]out|continue without|necessary only|essential only|only necessary|only essential)\b/i,
-    preferences:
-      /\b(manage|customize|customise|settings|options|choose|configure|save preferences|save settings|save my choices)\b/i,
-  },
-  fr: {
-    // "continuer" removed: too ambiguous ("Continuer sans accepter" must stay reject)
-    accept:
-      /\b(accepter|acceptez|tout accepter|autoriser|tout autoriser|autoriser tout|j'accepte|d'accord|valider|confirmer)\b/i,
-    reject:
-      /\b(refus|refuser|tout refuser|rejeter|tout rejeter|non merci|continuer sans accepter|n[eé]cessaires? uniquement|essentiels? uniquement|que les n[eé]cessaires?)\b/i,
-    preferences:
-      /\b(param[eè]tres|pr[eé]f[eé]rences|personnaliser|g[eé]rer|choisir|enregistrer|sauvegarder)\b/i,
-  },
-  de: {
-    accept:
-      /\b(akzeptieren|alle akzeptieren|zustimmen|einverstanden|annehmen|alle annehmen|ich stimme zu)\b/i,
-    reject: /\b(ablehnen|alle ablehnen|abweisen|nicht zustimmen|nein danke|nur notwendige)\b/i,
-    preferences: /\b(einstellungen|anpassen|verwalten|konfigurieren|ausw[äa]hlen|mehr optionen)\b/i,
-  },
-  es: {
-    accept: /\b(aceptar|aceptar todo|acepto|estoy de acuerdo|permitir todo)\b/i,
-    reject:
-      /\b(rechazar|rechazar todo|denegar|no gracias|continuar sin aceptar|solo necesarias?)\b/i,
-    preferences: /\b(ajustes|configurar|gestionar|opciones|personalizar|preferencias)\b/i,
-  },
-  it: {
-    accept: /\b(accetta|accetta tutto|accetto|acconsento|acconsento a tutto|consenti tutto)\b/i,
-    reject: /\b(rifiuta|rifiuta tutto|nega|no grazie|solo necessari)\b/i,
-    preferences: /\b(impostazioni|personalizza|gestisci|opzioni|configura|preferenze)\b/i,
-  },
-  nl: {
-    accept: /\b(accepteren|alles accepteren|akkoord|ik ga akkoord|alles toestaan)\b/i,
-    reject: /\b(weigeren|alles weigeren|afwijzen|nee bedankt|alleen noodzakelijke)\b/i,
-    preferences: /\b(instellingen|aanpassen|beheren|instellen|voorkeuren)\b/i,
-  },
-  pl: {
-    // No \b anchors: Polish words often end in non-ASCII characters (ć, ę, ó)
-    // which are outside JS \w, so \b would not match at the word end.
-    // Negative lookbehind prevents "zgadzam się" from matching inside "nie zgadzam się".
-    accept: /zaakceptuj( wszystkie)?|(?<!nie\s)zgadzam si[eę]|akceptuj[eę]/i,
-    reject: /odrzuć( wszystkie)?|nie zgadzam si[eę]|odm[oó]w/i,
-    preferences: /ustawienia|dostosuj|zarz[aą]dzaj|opcje|skonfiguruj|preferencje/i,
-  },
-  pt: {
-    accept: /\b(aceitar|aceitar tudo|aceito|concordo)\b/i,
-    reject: /\b(rejeitar|rejeitar tudo|recusar|n[aã]o obrigado)\b/i,
-    preferences:
-      /\b(configura[çc][oõ]es|personalizar|gerir|op[çc][oõ]es|defini[çc][oõ]es|prefer[eê]ncias)\b/i,
-  },
-};
 
 /**
  * Always return all locale patterns regardless of the page's declared language.
@@ -201,11 +115,10 @@ function resolveButtonPatterns(_lang: string | null): {
   reject: RegExp[];
   preferences: RegExp[];
 } {
-  const all = Object.values(PATTERNS_BY_LOCALE);
   return {
-    accept: all.map((p) => p.accept),
-    reject: all.map((p) => p.reject),
-    preferences: all.map((p) => p.preferences),
+    accept: LOCALE_VOCAB.accept,
+    reject: LOCALE_VOCAB.reject,
+    preferences: LOCALE_VOCAB.preferences,
   };
 }
 
