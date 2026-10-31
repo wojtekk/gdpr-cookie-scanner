@@ -279,3 +279,47 @@ describe("Swedish consent wording", () => {
     );
   });
 });
+
+describe("Norwegian consent wording", () => {
+  it("flags 'Fortsett uten å godta' as an indirect reject label", () => {
+    const result = analyzeButtonWording([makeButton("reject", "Fortsett uten å godta")]);
+    expect(result.hasIndirectRejectLabel).toBe(true);
+  });
+
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const INFO_CASES: Array<[string, string]> = [
+    ["formål", "purposes"],
+    ["partnere", "third-parties"],
+    ["tredjepart", "third-parties"],
+    ["partnar", "third-parties"],
+    ["endre", "withdrawal"],
+    ["trekke tilbake", "withdrawal"],
+    ["trekke samtykket tilbake", "withdrawal"],
+    ["trekkje tilbake", "withdrawal"],
+  ];
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the start of the text", (stem, key) => {
+    const result = analyzeModalText(`${cap(stem)} nettstedet`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each(INFO_CASES)("finds the stem '%s' (%s) at the end of the text", (stem, key) => {
+    const result = analyzeModalText(`Nettstedet ${cap(stem)}`);
+    expect(result.missingInfo).not.toContain(key);
+  });
+
+  it.each([
+    "Vi bruker cookies",
+    "Vi bruker cookies. Andre cookies er nødvendige for at nettstedet skal fungere.",
+  ])("reports all three concepts missing for '%s'", (text) => {
+    const result = analyzeModalText(text);
+    expect(result.missingInfo).toEqual(
+      expect.arrayContaining(["purposes", "third-parties", "withdrawal"]),
+    );
+  });
+
+  it("does not match 'endre' inside French 'rendre'", () => {
+    const result = analyzeModalText("Vous pouvez rendre visite");
+    expect(result.missingInfo).toContain("withdrawal");
+  });
+});
