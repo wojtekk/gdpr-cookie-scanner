@@ -12,3 +12,4 @@ Deliberate behaviour changes for existing locales:
 
 - Consent text is NFC-normalised before matching, so decomposed Unicode forms now match.
 - The English privacy URL stem `/privacy/([a-z]{2}-)?polic` is new, so links such as `/privacy/fi-policy` are recognised.
+- French "Administrer mes choix" was `unknown` and is now classified `preferences` through the new Norwegian and Danish `administrer` stem.

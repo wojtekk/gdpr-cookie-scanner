@@ -36,7 +36,7 @@ export const no: LocaleData = {
   },
   info: {
     purposes: [/formål/iu, /føremål/iu],
-    "third-parties": [/tredjepart/i, /partnere/i, /partnerne/i, /partnar/i],
+    "third-parties": [/tredjepart/i, /partner(e|ne)(?![\p{L}\p{M}])/iu, /partnar/i],
     withdrawal: [
       /(?<![\p{L}\p{M}])endre(r)?(?![\p{L}\p{M}])/iu,
       /(?<![\p{L}\p{M}])trekk\w*\s+(\S+\s+){0,3}tilbake/iu,

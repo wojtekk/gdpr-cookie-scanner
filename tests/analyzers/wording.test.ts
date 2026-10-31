@@ -365,4 +365,15 @@ describe("Danish consent wording", () => {
     const patterns = getLocale("da")!.info["third-parties"];
     expect(patterns.some((r) => r.test("Partnerentwicklung und Marketing"))).toBe(false);
   });
+
+  it.each([
+    "We have partnered with a few companies. We use cookies for analytics purposes. 13 months. Withdraw consent.",
+    "Unser Partnernetzwerk verwendet Cookies. We use cookies for analytics purposes. 13 months. Withdraw consent.",
+    "Wir nutzen Cookies in unserer Partnerebene. We use cookies for analytics purposes. 13 months. Withdraw consent.",
+  ])(
+    "Norwegian partner stems do not make other-language text report third-parties as present: %s",
+    (text) => {
+      expect(analyzeModalText(text).missingInfo).toContain("third-parties");
+    },
+  );
 });
