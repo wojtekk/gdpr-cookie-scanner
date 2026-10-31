@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Samsvarende testside</title>
+  </head>
+  <body>
+    <main>
+      <h1>Velkommen til nettstedet vårt</h1>
+    </main>
+
+    <footer>
+      <a href="/legal/no-footer">Personvernpolicy</a>
+    </footer>
+
+    <div
+      id="cookie-banner"
+      style="
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1a1a2e;
+        color: #fff;
+        padding: 20px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      "
+    >
+      <p style="flex: 1; margin: 0">
+        Vi bruker informasjonskapsler til analyse og andre <strong>formål</strong> sammen med
+        <strong>tredjeparter</strong>. Informasjonskapsler lagres i <strong>13 måneder</strong>. Du
+        kan når som helst <strong>endre eller trekke tilbake</strong> samtykket ditt.
+        <a href="/legal/no-modal" style="color: #90e0ef">Personvernerklæring</a>.
+      </p>
+      <button
+        id="reject-btn"
+        style="
+          padding: 10px 20px;
+          background: transparent;
+          color: #fff;
+          border: 1px solid #fff;
+          cursor: pointer;
+          font-size: 14px;
+        "
+      >
+        Avvis alle
+      </button>
+      <button
+        id="prefs-btn"
+        style="
+          padding: 10px 20px;
+          background: transparent;
+          color: #fff;
+          border: 1px solid #fff;
+          cursor: pointer;
+          font-size: 14px;
+        "
+      >
+        Tilpass eller avvis
+      </button>
+      <button
+        id="accept-btn"
+        style="
+          padding: 10px 20px;
+          background: #4caf50;
+          color: #fff;
+          border: none;
+          cursor: pointer;
+          font-size: 14px;
+        "
+      >
+        Godta alle
+      </button>
+    </div>
+
+    <script>
+      document.getElementById("prefs-btn").addEventListener("click", function () {
+        // Dummy second layer: opens nothing and sets no cookie.
+      });
+
+      document.getElementById("accept-btn").addEventListener("click", function () {
+        document.getElementById("cookie-banner").style.display = "none";
+        document.cookie = "consent=accepted; path=/; max-age=31536000";
+      });
+
+      document.getElementById("reject-btn").addEventListener("click", function () {
+        document.getElementById("cookie-banner").style.display = "none";
+        document.cookie = "consent=rejected; path=/; max-age=31536000";
+      });
+    </script>
+  </body>
+</html>
