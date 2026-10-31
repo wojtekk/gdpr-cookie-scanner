@@ -363,3 +363,56 @@ describe("classifyButtonText — sv", () => {
     expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
   });
 });
+
+describe("classifyButtonText — no", () => {
+  it.each(["Godta alle", "GODTA ALLE", "Aksepter alle", "Jeg godtar", "Tillat alle"])(
+    'classifies "%s" as accept',
+    (label) => {
+      expect(classifyButtonText(label, "no")).toBe("accept");
+    },
+  );
+
+  it.each([
+    "Avvis alle",
+    "Avslå",
+    "AVSLÅ",
+    "Avslå".normalize("NFD"),
+    "Kun nødvendige",
+    "Nei takk",
+    "Fortsett uten å godta",
+  ])('classifies "%s" as reject', (label) => {
+    expect(classifyButtonText(label, "no")).toBe("reject");
+  });
+
+  it.each([
+    "Tilpass eller avvis",
+    "Avvis eller tilpass",
+    "Innstillinger",
+    "Cookieinnstillinger",
+    "Administrer",
+  ])('classifies "%s" as preferences', (label) => {
+    expect(classifyButtonText(label, "no")).toBe("preferences");
+  });
+
+  it('does not classify "Nødvendige cookies" as reject', () => {
+    expect(classifyButtonText("Nødvendige cookies", "no")).not.toBe("reject");
+  });
+
+  describe("Nynorsk (assumed vocabulary)", () => {
+    it('classifies "Innstillingar" as preferences', () => {
+      expect(classifyButtonText("Innstillingar", "nn-NO")).toBe("preferences");
+    });
+
+    it('classifies "Berre naudsynte" as reject', () => {
+      expect(classifyButtonText("Berre naudsynte", "nn-NO")).toBe("reject");
+    });
+
+    it('classifies "Tillat alle" as accept', () => {
+      expect(classifyButtonText("Tillat alle", "nn-NO")).toBe("accept");
+    });
+  });
+
+  it('keeps English "Manage or reject" as reject', () => {
+    expect(classifyButtonText("Manage or reject", "en")).toBe("reject");
+  });
+});

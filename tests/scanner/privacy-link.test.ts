@@ -180,6 +180,31 @@ describe("selectPrivacyPolicyUrl", () => {
     });
   });
 
+  describe("Norwegian policy links", () => {
+    test.each([
+      "Personvernerklæring",
+      "Personvern- og cookieerklæring",
+      "Personvernpolicy",
+      "Personopplysninger-policy",
+    ])("text '%s' matches", (text) => {
+      expect(pick([{ href: "/x/1", text }])).toBe("/x/1");
+    });
+
+    test.each([
+      "https://example.no/personvernerklaering",
+      "https://example.no/personvernerkl%C3%A6ring",
+    ])("URL %s matches", (href) => {
+      expect(pick([{ href }])).toBe(href);
+    });
+
+    test.each(["Personverninnstillinger", "Personvernombud"])(
+      "text '%s' does not match",
+      (text) => {
+        expect(pick([{ href: "/x/1", text }])).toBeNull();
+      },
+    );
+  });
+
   test("every privacy URL stem is ASCII", () => {
     for (const p of aggregateLocales().privacyUrl) expect(p).toMatch(/^[\x00-\x7f]*$/);
   });
