@@ -131,16 +131,16 @@ Stems are matched; inflected and compound forms follow.
 
 **Observed on the live sites (2026-10-30):**
 
-| | fi (Tori) | sv (Blocket) | no (FINN) | da (DBA) |
-|---|---|---|---|---|
-| Accept | Hyväksy kaikki | Godkänn alla | Godta alle | Tillad alle |
-| Reject | none on first layer | none on first layer | none on first layer | Kun nødvendige |
-| Preferences | Muokkaa tai kiellä | Hantera eller avvisa | Tilpass eller avvis | Tillad udvalgte, Tilpas tjenester |
-| Policy link, footer (light-DOM-invisible) | Tietosuojakäytäntö | Personuppgifts- och cookiepolicy | Personvernerklæring | Privatlivspolitik |
-| Policy link, modal | Tietosuoja- ja evästekäytäntö | Personuppgifts- och cookiepolicy | Personvern- og cookieerklæring | …behandler dine personoplysninger |
-| Purposes | tarkoituksiin | ändamål | formål | formål |
-| Third parties | mainontakumppania | partners | partnere | reklamepartnere |
-| Withdrawal | muuttaa | ändra | endre | ændre; trække samtykket tilbage |
+|                                           | fi (Tori)                     | sv (Blocket)                     | no (FINN)                      | da (DBA)                          |
+| ----------------------------------------- | ----------------------------- | -------------------------------- | ------------------------------ | --------------------------------- |
+| Accept                                    | Hyväksy kaikki                | Godkänn alla                     | Godta alle                     | Tillad alle                       |
+| Reject                                    | none on first layer           | none on first layer              | none on first layer            | Kun nødvendige                    |
+| Preferences                               | Muokkaa tai kiellä            | Hantera eller avvisa             | Tilpass eller avvis            | Tillad udvalgte, Tilpas tjenester |
+| Policy link, footer (light-DOM-invisible) | Tietosuojakäytäntö            | Personuppgifts- och cookiepolicy | Personvernerklæring            | Privatlivspolitik                 |
+| Policy link, modal                        | Tietosuoja- ja evästekäytäntö | Personuppgifts- och cookiepolicy | Personvern- og cookieerklæring | …behandler dine personoplysninger |
+| Purposes                                  | tarkoituksiin                 | ändamål                          | formål                         | formål                            |
+| Third parties                             | mainontakumppania             | partners                         | partnere                       | reklamepartnere                   |
+| Withdrawal                                | muuttaa                       | ändra                            | endre                          | ændre; trække samtykket tilbage   |
 
 **Assumed, standard wording, not seen on these sites. Needs native review:**
 
@@ -177,7 +177,7 @@ needs a decision. Default if unanswered: leave as is and list it as a follow-up.
 - "Manage or reject" in English is classified as reject by the same reject-first ordering (pinned by a test, not changed).
 - The fallback modal search and other `page.evaluate` DOM queries also skip shadow roots.
 - Existing settings-link false positives: French "Paramètres de confidentialité" and German "Datenschutz-Einstellungen"
-  (privacy *settings*) match the `confidentialit` / `datenschutz` stems and can be returned as the policy when they
+  (privacy _settings_) match the `confidentialit` / `datenschutz` stems and can be returned as the policy when they
   come first. Fixing it means adding `paramètres` / `einstellung` to the settings words, which changes fr/de results.
   Pinned by a baseline row, not changed here.
 

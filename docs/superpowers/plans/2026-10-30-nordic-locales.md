@@ -53,10 +53,12 @@
 ### Task 1: Characterization baseline (tests only, passes on current code)
 
 **Files:**
+
 - Create: `tests/scanner/locale-corpus.ts`, `tests/scanner/locale-baseline.test.ts`, `tests/scanner/locale-baseline.golden.json`, `tests/e2e/privacy-link-baseline.test.ts`
 - Also commit: the spec and this plan under `docs/superpowers/`.
 
 **Interfaces:**
+
 - Produces: `BUTTON_CORPUS`, `INFO_CORPUS`, `INDIRECT_CORPUS` (all `readonly string[]`) from `locale-corpus.ts`; golden shape `{ _generatedFrom: string, buttons: Record<string, ConsentButtonType>, info: Record<string, string[]>, indirect: Record<string, boolean> }`.
 
 - [ ] **Step 1: Commit the docs.** `git add docs/superpowers`, then `git commit -m "docs: Nordic locale design and plan"`.
@@ -77,10 +79,12 @@
 ### Task 2: Locale modules for the eight existing languages (not yet wired)
 
 **Files:**
+
 - Create: `src/locales/types.ts`, `src/locales/{en,fr,de,es,it,nl,pl,pt}.ts`, `src/locales/index.ts`
 - Test: `tests/scanner/locales.test.ts`
 
 **Interfaces:**
+
 - Produces (`types.ts`):
   ```ts
   export type InfoKey = "purposes" | "third-parties" | "withdrawal";
@@ -93,12 +97,19 @@
   }
   ```
 - Produces (`index.ts`):
+
   ```ts
   export const LOCALES: readonly LocaleData[];
   export function getLocale(code: string): LocaleData | undefined;
   export interface AggregatedLocales {
-    accept: RegExp[]; reject: RegExp[]; preferences: RegExp[]; combinedPreferences: RegExp[];
-    indirectReject: RegExp[]; privacyUrl: string[]; privacyText: string[]; info: Record<InfoKey, RegExp[]>;
+    accept: RegExp[];
+    reject: RegExp[];
+    preferences: RegExp[];
+    combinedPreferences: RegExp[];
+    indirectReject: RegExp[];
+    privacyUrl: string[];
+    privacyText: string[];
+    info: Record<InfoKey, RegExp[]>;
   }
   export function aggregateLocales(codes?: readonly string[]): AggregatedLocales; // all locales when omitted
   ```
@@ -116,9 +127,11 @@
 ### Task 3: Rewire consumers to the locale modules
 
 **Files:**
+
 - Modify: `src/scanner/consent-modal.ts` (remove `PATTERNS_BY_LOCALE`, `ButtonPatternSet`, `PRIVACY_POLICY_URL_PATTERNS`, `PRIVACY_POLICY_TEXT_PATTERNS`), `src/analyzers/wording.ts` (remove `INDIRECT_REJECT_LABELS`; rebuild `REQUIRED_INFO_PATTERNS`)
 
 **Interfaces:**
+
 - Consumes: `aggregateLocales()` from Task 2.
 - Produces: no signature changes. `resolveButtonPatterns(_lang)` still returns `{accept, reject, preferences}` arrays; `analyzeModalText` and `analyzeButtonWording` unchanged. `REQUIRED_INFO_PATTERNS` keeps its order: purposes, third-parties, duration, withdrawal; `duration` stays the literal regex.
 
@@ -130,6 +143,7 @@
 ### Task 4: NFC normalisation
 
 **Files:**
+
 - Modify: `normalizeText` in `src/scanner/consent-modal.ts`; `analyzeModalText` in `src/analyzers/wording.ts`
 - Test: `tests/scanner/button-classification.test.ts`
 
@@ -142,15 +156,25 @@
 ### Task 5: Shadow-DOM-aware privacy link search
 
 **Files:**
+
 - Create: `src/scanner/privacy-link.ts`
 - Modify: `findPrivacyPolicyUrl` in `src/scanner/consent-modal.ts`; add the narrow `/privacy/` URL stem to `src/locales/en.ts`
 - Test: `tests/scanner/privacy-link.test.ts` (pure), `tests/e2e/privacy-link.test.ts` (browser)
 
 **Interfaces:**
+
 - Produces (`privacy-link.ts`):
   ```ts
-  export interface LinkCandidate { href: string; text: string; inShadow: boolean }
-  export function selectPrivacyPolicyUrl(links: LinkCandidate[], urlPatterns: string[], textPatterns: string[]): string | null
+  export interface LinkCandidate {
+    href: string;
+    text: string;
+    inShadow: boolean;
+  }
+  export function selectPrivacyPolicyUrl(
+    links: LinkCandidate[],
+    urlPatterns: string[],
+    textPatterns: string[],
+  ): string | null;
   ```
   Rules: skip hrefs by the same rule the old code applies (move it unchanged; the baseline pins what `href="#"` does today) plus `javascript:`, `data:`, `vbscript:`; NFC-normalise and trim text; **drop any link whose NFC text, or whose URL host+path after `decodeURI` (in a try/catch, then NFC), matches the Nordic settings words** `/asetukset|inst[aä]llning|innstilling|indstilling/i`, **or whose URL host name matches `/settings/i`** (English `settings` in the text or path does not drop a link); among the rest, match by URL or text patterns (case-insensitive); light-DOM candidates win over shadow ones regardless of position in the list, document order within each; return the original `href`.
 - `findPrivacyPolicyUrl(page, scopeSelector?)` keeps its signature and its existing scope behaviour (`document.querySelector(scope) ?? document`; pinned in Task 1, a shadow-hosted modal falling back to the whole page is a documented follow-up). In `page.evaluate` it collects `LinkCandidate[]` from the scope root (or `document`), then walks `root.shadowRoot` and every descendant's open `shadowRoot` recursively (closed roots have `shadowRoot === null`), marking `inShadow`. Matching is Node-side: call `selectPrivacyPolicyUrl` with the aggregated patterns after `evaluate` returns, never inside it. It keeps `.catch(() => null)`.
@@ -172,11 +196,13 @@
 ### Task 6: Finnish and the combined-label mechanism
 
 **Files:**
+
 - Create: `src/locales/fi.ts`; register in `src/locales/index.ts`
 - Modify: `resolveButtonPatterns`, `classifyButtonType`, `classifyButtonText`, `extractButtons` in `src/scanner/consent-modal.ts`
 - Test: `tests/scanner/button-classification.test.ts`, `tests/analyzers/wording.test.ts`, `tests/scanner/privacy-link.test.ts`
 
 **Interfaces:**
+
 - `classifyButtonType(text, accept, reject, preferences, combinedPreferences: RegExp[])` tests `combinedPreferences` **before** reject and returns `"preferences"`. `resolveButtonPatterns` also returns `combinedPreferences`.
 - Vocabulary: spec "Vocabulary" table, fi column plus the assumed list. Finnish `combinedPreferences` = preferences verb + `tai` + reject verb **in either order** (observed: `Muokkaa tai kiellä`; also `Hylkää tai muokkaa`, `Hallitse tai hylkää`). Bare `kiellä` is not in `reject`.
 
@@ -234,6 +260,7 @@
 ### Task 10: End-to-end fixtures per language
 
 **Files:**
+
 - Create: `tests/e2e/fixtures/compliant-site-{fi,sv,no,da}.html`
 - Modify: `tests/e2e/scanner.test.ts` (`makeOptions(fixture, locale = "en-US")`)
 
