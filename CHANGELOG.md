@@ -1,5 +1,15 @@
 # @slashgear/gdpr-cookie-scanner
 
+## 3.9.1
+
+### Patch Changes
+
+- 2b79054: chore: monthly Open Cookie Database update
+- 7ac5793: chore: monthly Open Cookie Database update
+- 3f50fe0: chore: monthly Open Cookie Database update
+- 8fda3a1: chore: monthly Open Cookie Database update
+- 20d366b: chore: monthly Open Cookie Database update
+
 ## 3.9.0
 
 ### Minor Changes
