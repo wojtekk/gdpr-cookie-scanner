@@ -1,4 +1,4 @@
-import type { Page } from "playwright";
+import type { Frame, Page } from "playwright";
 import type { ConsentModal, ConsentButton, ConsentCheckbox, ConsentButtonType } from "../types.js";
 import { analyzeButtonWording } from "../analyzers/wording.js";
 import type { ScanOptions } from "../types.js";
@@ -58,12 +58,15 @@ const HEURISTIC_SELECTORS = [
   "[role='alertdialog']",
 ];
 
+/** Anything with a document to query: the main page or an iframe's Frame. */
+type Scope = Page | Frame;
+
 /**
  * Find a privacy policy link within a given scope (modal selector) or the full page.
  * Returns the absolute URL of the first matching link, or null.
  */
 export async function findPrivacyPolicyUrl(
-  page: Page,
+  page: Scope,
   scopeSelector?: string,
 ): Promise<string | null> {
   // Collect only inside the page; matching happens Node-side in selectPrivacyPolicyUrl.
@@ -257,7 +260,7 @@ export async function detectConsentModal(page: Page, options: ScanOptions): Prom
 }
 
 async function extractButtons(
-  page: Page,
+  page: Scope,
   modalSelector: string,
   lang: string | null,
 ): Promise<ConsentButton[]> {
@@ -348,42 +351,87 @@ async function extractButtons(
   return buttons;
 }
 
-async function extractCheckboxes(page: Page, modalSelector: string): Promise<ConsentCheckbox[]> {
+async function extractCheckboxes(
+  page: Scope,
+  modalSelector: string,
+  skipDisabled = false,
+): Promise<ConsentCheckbox[]> {
   return page
-    .evaluate((selector) => {
-      const modal = document.querySelector(selector);
-      if (!modal) return [];
+    .evaluate(
+      ({ selector, skipDisabled }) => {
+        const modal = document.querySelector(selector);
+        if (!modal) return [];
 
-      const checkboxes: ConsentCheckbox[] = [];
-      const inputs = modal.querySelectorAll(
-        'input[type="checkbox"], input[type="radio"], [role="switch"], [role="checkbox"]',
-      );
+        const checkboxes: ConsentCheckbox[] = [];
+        const inputs = modal.querySelectorAll(
+          'input[type="checkbox"], input[type="radio"], [role="switch"], [role="checkbox"]',
+        );
 
-      for (const input of inputs) {
-        const el = input as HTMLInputElement;
-        // Find associated label
-        let label = "";
-        if (el.id) {
-          const labelEl = document.querySelector(`label[for="${el.id}"]`);
-          label = labelEl?.textContent?.trim() ?? "";
+        for (const input of inputs) {
+          const el = input as HTMLInputElement;
+          if (skipDisabled && (el.disabled || el.getAttribute("aria-disabled") === "true"))
+            continue;
+          // Find associated label
+          let label = "";
+          if (el.id) {
+            const labelEl = document.querySelector(`label[for="${el.id}"]`);
+            label = labelEl?.textContent?.trim() ?? "";
+          }
+          if (!label) {
+            const parent = el.closest("label") ?? el.parentElement;
+            label = parent?.textContent?.trim() ?? "";
+          }
+
+          checkboxes.push({
+            name: el.name || el.id || "",
+            label: label.substring(0, 100),
+            isCheckedByDefault: el.checked || el.getAttribute("aria-checked") === "true",
+            category: "unknown", // will be classified later
+            selector: el.id ? `#${el.id}` : "",
+          });
         }
-        if (!label) {
-          const parent = el.closest("label") ?? el.parentElement;
-          label = parent?.textContent?.trim() ?? "";
-        }
 
-        checkboxes.push({
-          name: el.name || el.id || "",
-          label: label.substring(0, 100),
-          isCheckedByDefault: el.checked || el.getAttribute("aria-checked") === "true",
-          category: "unknown", // will be classified later
-          selector: el.id ? `#${el.id}` : "",
-        });
-      }
-
-      return checkboxes;
-    }, modalSelector)
+        return checkboxes;
+      },
+      { selector: modalSelector, skipDisabled },
+    )
     .catch(() => [] as ConsentCheckbox[]);
+}
+
+export interface FrameModal {
+  text: string;
+  buttons: ConsentButton[];
+  checkboxes: ConsentCheckbox[];
+  privacyPolicyUrl: string | null;
+}
+
+/**
+ * Read a consent modal that lives in an iframe (for example Sourcepoint, which renders in a
+ * cross-origin iframe the main-page scan cannot see). The scope is the frame's body.
+ * `detectConsentModal` still does not look in iframes.
+ *
+ * A blank, navigating or detached frame yields empty data instead of throwing.
+ * `skipDisabledCheckboxes` drops disabled toggles, such as an always-on "strictly necessary" one;
+ * it is off by default so main-frame scoring is unchanged.
+ */
+export async function extractModalFromFrame(
+  frame: Frame,
+  options: { lang?: string | null; skipDisabledCheckboxes?: boolean } = {},
+): Promise<FrameModal> {
+  const text = await frame
+    .$eval("body", (el) => el.textContent ?? "")
+    .then((t) => t.trim().replace(/\s+/g, " "))
+    .catch(() => "");
+  const buttons = await extractButtons(frame, "body", options.lang ?? null).catch(
+    () => [] as ConsentButton[],
+  );
+  const checkboxes = await extractCheckboxes(
+    frame,
+    "body",
+    options.skipDisabledCheckboxes ?? false,
+  );
+  const privacyPolicyUrl = await findPrivacyPolicyUrl(frame, "body");
+  return { text, buttons, checkboxes, privacyPolicyUrl };
 }
 
 function classifyButtonType(

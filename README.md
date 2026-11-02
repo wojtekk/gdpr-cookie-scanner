@@ -289,6 +289,30 @@ import type {
 } from "@slashgear/gdpr-cookie-scanner";
 ```
 
+### Reading a consent modal from an iframe
+
+Some CMPs (Sourcepoint, for example) render the modal in a cross-origin iframe. `detectConsentModal` does
+not look inside iframes, so the scan cannot see such a modal. `extractModalFromFrame` reads one from a
+Playwright `Frame`. It is exported from `dist/scanner/consent-modal.js`, not from the package root.
+
+```ts
+import { extractModalFromFrame } from "@slashgear/gdpr-cookie-scanner/dist/scanner/consent-modal.js";
+
+const frame = await (await page.$("iframe[id^='sp_message']"))!.contentFrame();
+const modal = await extractModalFromFrame(frame!, { skipDisabledCheckboxes: true });
+// modal: { text, buttons, checkboxes, privacyPolicyUrl }
+```
+
+- The scope is the frame's `body`. The main page is never read, so a footer link or a main-page button
+  cannot satisfy the check.
+- `buttons` carry the same data as for a main-frame modal: type, text, size, font size and contrast ratio.
+  `checkboxes` include pre-ticked inputs and `role="switch"` / `role="checkbox"` toggles.
+- `privacyPolicyUrl` is found by URL stem or by link text, including text with non-breaking spaces.
+- `skipDisabledCheckboxes` (default `false`) drops `disabled` and `aria-disabled="true"` toggles, such as an
+  always-on "strictly necessary" switch, so they do not count as pre-ticked consent.
+- A blank, navigating or detached frame returns empty data (`buttons: []`, `checkboxes: []`,
+  `privacyPolicyUrl: null`) instead of throwing.
+
 ## How it works
 
 ```mermaid
