@@ -243,3 +243,63 @@ describe("selectPrivacyPolicyUrl", () => {
     expect(selectPrivacyPolicyUrl([bad, good], agg.privacyUrl, agg.privacyText)).toBe(good.href);
   });
 });
+
+describe("link text variants (text-only match, href has no stem)", () => {
+  const HREF = "https://example.com/p/42";
+  const base = {
+    sv: "Personuppgifts- och cookiepolicy",
+    fi: "Tietosuoja- ja evästekäytäntö",
+    no: "Personvern- og cookieerklæring",
+    da: "hvordan Vend behandler dine personoplysninger",
+  };
+  const variants = (t: string): Array<[string, string]> => [
+    ["exact", t],
+    ["double spaces", t.replace(/ /g, "  ")],
+    ["nbsp", t.replace(/ /g, " ")],
+    ["leading/trailing whitespace", `  ${t}\n `],
+    ["newline inside", t.replace(" ", "\n   ")],
+    ["no space after hyphen", t.replace("- ", "-")],
+    ["space before hyphen", t.replace("-", " -")],
+    ["en dash", t.replace("-", "–")],
+    ["soft hyphen", t.replace("-", "­")],
+    ["UPPERCASE", t.toUpperCase()],
+    ["trailing period", `${t}.`],
+    ["NFD", t.normalize("NFD")],
+    ["zero-width space", t.replace(" ", "​ ")],
+  ];
+  const found = (text: string) => pick([{ href: HREF, text }]);
+  // Danish has no hyphen in its text, so the hyphen variants do not apply.
+  const hyphenOnly = new Set([
+    "no space after hyphen",
+    "space before hyphen",
+    "en dash",
+    "soft hyphen",
+  ]);
+
+  for (const lang of ["sv", "fi", "no"] as const) {
+    describe(lang, () => {
+      test.each(variants(base[lang]))("%s is found", (_label, text) => {
+        expect(found(text)).toBe(HREF);
+      });
+    });
+  }
+
+  describe("da", () => {
+    test.each(variants(base.da).filter(([label]) => !hyphenOnly.has(label)))(
+      "%s is found",
+      (_label, text) => {
+        expect(found(text)).toBe(HREF);
+      },
+    );
+  });
+
+  test.each([
+    "Personverninnstillinger",
+    "Personvernombud",
+    "Personvern",
+    "Personuppgifts- och cookieinställningar",
+    "Tietosuoja- ja evästeasetukset",
+  ])("'%s' is not a policy link", (text) => {
+    expect(found(text)).toBeNull();
+  });
+});

@@ -21,7 +21,7 @@ export const sv: LocaleData = {
   privacy: {
     // ASCII only: link.href is percent-encoded (ä = %C3%A4).
     urlStems: ["integritetspolicy", "personuppgiftspolicy"],
-    textStems: ["personuppgifts-?\\s+och\\s", "personuppgiftspolicy", "integritetspolicy"],
+    textStems: ["personuppgifts\\s*-?\\s*och\\s", "personuppgiftspolicy", "integritetspolicy"],
   },
   info: {
     purposes: [/ändamål/iu],

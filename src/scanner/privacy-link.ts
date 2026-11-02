@@ -8,6 +8,20 @@ export interface LinkCandidate {
 const NORDIC_SETTINGS = /asetukset|inst[aä]llning|innstilling|indstilling/i;
 const SETTINGS_HOST = /settings/i;
 
+/**
+ * Canonical form of link text for matching: NFC, invisible characters removed
+ * (soft hyphen, zero-width space/joiners, word joiner, BOM), Unicode dashes mapped
+ * to "-", all whitespace (including NBSP) collapsed to single spaces, trimmed.
+ */
+function normalizeLinkText(text: string): string {
+  return text
+    .normalize("NFC")
+    .replace(/[\u00AD\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function isSkippedHref(href: string): boolean {
   const normalizedHref = href.toLowerCase();
   return (
@@ -53,7 +67,7 @@ export function selectPrivacyPolicyUrl(
 
   const matches = (link: LinkCandidate): boolean => {
     if (typeof link.href !== "string" || isSkippedHref(link.href)) return false;
-    const text = link.text.normalize("NFC").trim();
+    const text = normalizeLinkText(link.text);
     if (isSettingsLink(link.href, text)) return false;
     return urlRes.some((r) => r.test(link.href)) || textRes.some((r) => r.test(text));
   };

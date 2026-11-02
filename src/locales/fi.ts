@@ -23,7 +23,7 @@ export const fi: LocaleData = {
     urlStems: ["tietosuojak(a|%c3%a4)yt(a|%c3%a4)n", "tietosuojaseloste", "rekisteriseloste"],
     textStems: [
       "tietosuojak[aä]yt[aä]n",
-      "tietosuoja-?\\s+ja\\s",
+      "tietosuoja\\s*-?\\s*ja\\s",
       "tietosuojaseloste",
       "rekisteriseloste",
     ],

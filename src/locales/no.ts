@@ -32,7 +32,7 @@ export const no: LocaleData = {
       "personvernerkl[aæ]ring",
       "personvernfr[aå]segn",
       "personvernpolicy",
-      "personvern-?\\s+og\\s",
+      "personvern\\s*-?\\s*og\\s",
       "personopplysning\\w*-?\\s*policy",
     ],
   },

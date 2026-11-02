@@ -307,7 +307,7 @@ const modal = await extractModalFromFrame(frame!, { skipDisabledCheckboxes: true
   cannot satisfy the check.
 - `buttons` carry the same data as for a main-frame modal: type, text, size, font size and contrast ratio.
   `checkboxes` include pre-ticked inputs and `role="switch"` / `role="checkbox"` toggles.
-- `privacyPolicyUrl` is found by URL stem or by link text, including text with non-breaking spaces.
+- `privacyPolicyUrl` is found by URL stem or by link text, including text with non-breaking spaces, soft hyphens, zero-width characters or Unicode dashes.
 - `skipDisabledCheckboxes` (default `false`) drops `disabled` and `aria-disabled="true"` toggles, such as an
   always-on "strictly necessary" switch, so they do not count as pre-ticked consent.
 - A blank, navigating or detached frame returns empty data (`buttons: []`, `checkboxes: []`,
