@@ -1,5 +1,15 @@
 # @slashgear/gdpr-cookie-scanner
 
+## 3.10.0
+
+### Minor Changes
+
+- d5756df: Add `extractModalFromFrame(frame, options)`, which reads a consent modal's text, buttons, checkboxes and privacy policy link from a Playwright `Frame`. Sourcepoint renders its modal in a cross-origin iframe that the scorer could not see, so those sites were scored as having no modal. `findPrivacyPolicyUrl` now accepts a `Frame` too, and the new `skipDisabledCheckboxes` option (off by default, so main-frame scoring is unchanged) ignores disabled toggles such as an always-on "strictly necessary" switch.
+
+### Patch Changes
+
+- d69fe5f: Match privacy policy links through small text changes. Link text is now normalised before matching: invisible characters (soft hyphen, zero-width space) are dropped, Unicode dashes become `-` and all whitespace collapses to single spaces. The Swedish, Finnish and Norwegian "X- och/ja/og ..." patterns also accept a missing space after the hyphen or a space before it, so "Personuppgifts-och cookiepolicy" or an en dash no longer hides the policy link when its URL has no known stem.
+
 ## 3.9.1
 
 ### Patch Changes
